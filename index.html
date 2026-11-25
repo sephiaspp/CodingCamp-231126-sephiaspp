@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Expense &amp; Budget Visualizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAVBAR
+  ============================================================ -->
+  <header class="navbar" id="navbar">
+    <div class="navbar-inner">
+
+      <!-- Brand / Logo -->
+      <a href="#overview" class="navbar-brand" aria-label="Expense Tracker home">
+        <!-- Inline SVG Logo: wallet + leaf motif -->
+        <svg class="brand-logo" width="34" height="34" viewBox="0 0 34 34" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect width="34" height="34" rx="10" fill="#7C9473"/>
+          <!-- Wallet body -->
+          <rect x="6" y="11" width="22" height="14" rx="3" fill="white" fill-opacity="0.95"/>
+          <!-- Wallet flap -->
+          <rect x="6" y="11" width="22" height="5" rx="2" fill="white" fill-opacity="0.6"/>
+          <!-- Coin slot -->
+          <circle cx="23" cy="18" r="2.5" fill="#7C9473"/>
+          <!-- Small leaf accent -->
+          <path d="M10 23 Q11 19 15 20 Q12 22 10 23Z" fill="#D96868" fill-opacity="0.85"/>
+        </svg>
+        <span class="brand-text">Expense<span class="brand-accent">Tracker</span></span>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="navbar-nav" aria-label="Main navigation">
+        <a href="#overview"     class="nav-link" data-section="overview">Overview</a>
+        <a href="#add-expense"  class="nav-link" data-section="add-expense">Add Expense</a>
+        <a href="#insights"     class="nav-link" data-section="insights">Insights</a>
+        <a href="#transactions" class="nav-link" data-section="transactions">Transactions</a>
+        <a href="#categories"   class="nav-link" data-section="categories">Categories</a>
+      </nav>
+
+      <!-- Right controls -->
+      <div class="navbar-right">
+        <button id="themeToggle" class="btn-icon" aria-label="Toggle dark/light mode" title="Toggle theme">
+          <span id="themeIcon">🌙</span>
+        </button>
+        <!-- Hamburger (mobile) -->
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+          <span class="ham-bar"></span>
+          <span class="ham-bar"></span>
+          <span class="ham-bar"></span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu" aria-hidden="true">
+      <nav class="mobile-nav" aria-label="Mobile navigation">
+        <a href="#overview"     class="mobile-nav-link" data-section="overview">Overview</a>
+        <a href="#add-expense"  class="mobile-nav-link" data-section="add-expense">Add Expense</a>
+        <a href="#insights"     class="mobile-nav-link" data-section="insights">Insights</a>
+        <a href="#transactions" class="mobile-nav-link" data-section="transactions">Transactions</a>
+        <a href="#categories"   class="mobile-nav-link" data-section="categories">Categories</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       MAIN
+  ============================================================ -->
+  <main class="page-content">
+
+    <!-- ── SECTION A: OVERVIEW ── -->
+    <section id="overview" class="section section-overview">
+      <div class="container">
+
+        <div class="overview-hero">
+          <div class="hero-text">
+            <p class="hero-eyebrow">Your personal finance tracker ✦</p>
+            <h2 class="hero-heading">Your money,<br><span class="hero-accent">your way.</span></h2>
+            <p class="hero-desc">Keep track of your spending, one step at a time.</p>
+            <a href="#add-expense" class="btn btn-primary hero-cta">Start Tracking →</a>
+          </div>
+          <div class="hero-card-wrap">
+            <div class="hero-stat-card">
+              <p class="stat-label">Total Expenses</p>
+              <p class="stat-amount" id="totalAmount">Rp 0</p>
+              <p class="stat-sub" id="transactionCount">0 transactions recorded</p>
+              <div class="stat-decoration" aria-hidden="true">
+                <span>💸</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toast lives here, global -->
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION B: ADD EXPENSE ── -->
+    <section id="add-expense" class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">📝 Log it</span>
+          <h2 class="section-title">Add Expense</h2>
+          <p class="section-desc">Record a new spending item in seconds.</p>
+        </div>
+
+        <div class="form-card">
+          <form id="expenseForm" novalidate autocomplete="off">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="itemName">Item Name</label>
+                <input
+                  type="text"
+                  id="itemName"
+                  placeholder="e.g. Lunch, Bus ticket…"
+                  maxlength="60"
+                />
+                <span class="field-error" id="itemNameError"></span>
+              </div>
+
+              <div class="form-group">
+                <label for="amount">Amount (Rp)</label>
+                <input
+                  type="number"
+                  id="amount"
+                  placeholder="e.g. 25000"
+                  min="1"
+                  step="1"
+                />
+                <span class="field-error" id="amountError"></span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="category">Category</label>
+              <select id="category">
+                <option value="">— Select category —</option>
+                <option value="Food">🍔 Food</option>
+                <option value="Transport">🚗 Transport</option>
+                <option value="Fun">🎉 Fun</option>
+              </select>
+              <span class="field-error" id="categoryError"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-submit">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              Add Expense
+            </button>
+
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION C: INSIGHTS ── -->
+    <section id="insights" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">📊 Visualize</span>
+          <h2 class="section-title">Insights</h2>
+          <p class="section-desc">See where your money actually goes.</p>
+        </div>
+
+        <div class="insights-card card">
+          <div class="chart-wrapper" id="chartWrapper">
+            <div class="chart-canvas-wrap">
+              <canvas id="expenseChart" aria-label="Pie chart of expenses by category"></canvas>
+            </div>
+            <div class="chart-legend-custom" id="chartLegendCustom"></div>
+          </div>
+          <div class="chart-empty" id="chartEmpty">
+            <div class="empty-illo" aria-hidden="true">
+              <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="40" cy="40" r="38" stroke="currentColor" stroke-width="2" stroke-dasharray="6 4" opacity="0.3"/>
+                <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle" font-size="32">📊</text>
+              </svg>
+            </div>
+            <p class="empty-title">No spending data yet</p>
+            <p class="empty-sub">Add your first expense to see the chart!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION D: TRANSACTIONS ── -->
+    <section id="transactions" class="section section-alt">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">🧾 History</span>
+          <h2 class="section-title">Transactions</h2>
+          <p class="section-desc">All your recorded spending, organized.</p>
+        </div>
+
+        <div class="card transactions-card">
+          <!-- Filter Bar -->
+          <div class="filter-bar">
+            <div class="filter-controls">
+
+              <div class="filter-group">
+                <label for="filterMonth" class="filter-label">Month</label>
+                <select id="filterMonth" class="filter-select" aria-label="Filter by month">
+                  <option value="">All Months</option>
+                  <option value="0">January</option>
+                  <option value="1">February</option>
+                  <option value="2">March</option>
+                  <option value="3">April</option>
+                  <option value="4">May</option>
+                  <option value="5">June</option>
+                  <option value="6">July</option>
+                  <option value="7">August</option>
+                  <option value="8">September</option>
+                  <option value="9">October</option>
+                  <option value="10">November</option>
+                  <option value="11">December</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="filterYear" class="filter-label">Year</label>
+                <select id="filterYear" class="filter-select" aria-label="Filter by year">
+                  <option value="">All Years</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <label for="filterDate" class="filter-label">Specific Date</label>
+                <input type="date" id="filterDate" class="filter-select filter-date" aria-label="Filter by specific date" />
+              </div>
+
+              <button id="resetFilter" class="btn btn-reset-filter" aria-label="Reset all filters">
+                ✕ Reset
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Toolbar: count badge + sort -->
+          <div class="transactions-toolbar">
+            <p class="tx-count-badge" id="txCountBadge">0 items</p>
+            <div class="sort-wrap">
+              <label for="sortSelect" class="sr-only">Sort by</label>
+              <select id="sortSelect" class="sort-select" aria-label="Sort transactions">
+                <option value="date-desc">🕐 Newest first</option>
+                <option value="date-asc">🕐 Oldest first</option>
+                <option value="amount-desc">↑ Highest amount</option>
+                <option value="amount-asc">↓ Lowest amount</option>
+                <option value="category-asc">A→Z Category</option>
+                <option value="category-desc">Z→A Category</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Empty state -->
+          <div class="empty-state" id="emptyState">
+            <span class="empty-emoji">🛒</span>
+            <p class="empty-title">Nothing here yet</p>
+            <p class="empty-sub">Your transactions will show up here once you add them.</p>
+            <a href="#add-expense" class="btn btn-outline-primary">Add your first expense →</a>
+          </div>
+
+          <!-- List -->
+          <ul id="transactionList" class="transaction-list" aria-label="Expense transactions"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION E: CATEGORIES ── -->
+    <section id="categories" class="section">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">🏷️ Organize</span>
+          <h2 class="section-title">Categories</h2>
+          <p class="section-desc">Manage your spending categories.</p>
+        </div>
+
+        <div class="categories-layout">
+
+          <!-- Default categories display -->
+          <div class="card category-overview-card">
+            <h3 class="card-subtitle">Default Categories</h3>
+            <ul class="category-grid" id="defaultCategoryGrid">
+              <li class="cat-pill cat-pill--food">
+                <span class="cat-pill-icon">🍔</span>
+                <span class="cat-pill-name">Food</span>
+              </li>
+              <li class="cat-pill cat-pill--transport">
+                <span class="cat-pill-icon">🚗</span>
+                <span class="cat-pill-name">Transport</span>
+              </li>
+              <li class="cat-pill cat-pill--fun">
+                <span class="cat-pill-icon">🎉</span>
+                <span class="cat-pill-name">Fun</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Custom category manager -->
+          <div class="card custom-cat-card">
+            <h3 class="card-subtitle">Custom Categories</h3>
+            <p class="card-hint">Add your own categories and use them in the form above.</p>
+            <div class="category-input-row">
+              <input
+                type="text"
+                id="newCategoryInput"
+                placeholder="e.g. Groceries, Health…"
+                maxlength="30"
+                autocomplete="off"
+              />
+              <button id="addCategoryBtn" class="btn btn-primary">Add</button>
+            </div>
+            <span class="field-error" id="categoryInputError"></span>
+            <ul id="customCategoryList" class="tag-list" aria-label="Custom categories"></ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer class="app-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <svg width="20" height="20" viewBox="0 0 34 34" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <rect width="34" height="34" rx="10" fill="#7C9473"/>
+          <rect x="6" y="11" width="22" height="14" rx="3" fill="white" fill-opacity="0.95"/>
+          <rect x="6" y="11" width="22" height="5" rx="2" fill="white" fill-opacity="0.6"/>
+          <circle cx="23" cy="18" r="2.5" fill="#7C9473"/>
+          <path d="M10 23 Q11 19 15 20 Q12 22 10 23Z" fill="#D96868" fill-opacity="0.85"/>
+        </svg>
+        <span>ExpenseTracker</span>
+      </div>
+      <p class="footer-copy">RevoU Coding Camp · <span id="footerYear"></span></p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
